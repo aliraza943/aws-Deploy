@@ -2,12 +2,14 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema";
 
+const isProduction = process.env.NODE_ENV === "production" || process.env.NODE_ENV === "test";
+
 // pg connection pool
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
+    ssl: isProduction ? {
         rejectUnauthorized: false  // 👈 add this
-    }
+    } : false
     // e.g. postgresql://user:password@localhost:5432/tododb
 });
 

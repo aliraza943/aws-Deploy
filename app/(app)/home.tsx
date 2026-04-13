@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Image, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { createTodo, deleteTodo, getTodos, logout, updateTodo } from "../../lib/api";
 
-type Todo = { id: number; title: string; completed: boolean };
+type Todo = { id: number; title: string; completed: boolean, imageUrl?: string; };
 
 export default function HomeScreen() {
     const router = useRouter();
@@ -13,7 +14,7 @@ export default function HomeScreen() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editTitle, setEditTitle] = useState("");
     const [loading, setLoading] = useState(false);
-
+    const [imageUri, setImageUri] = useState<string | null>(null);
     // ── Handle session expired → redirect to login ────────────────────────────
     function handleError(e: any) {
         if (e.message === "SESSION_EXPIRED") {
@@ -22,7 +23,18 @@ export default function HomeScreen() {
             Alert.alert("Error", e.message);
         }
     }
+    // pick image function
+    async function pickImage() {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 0.7,
+        });
 
+        if (!result.canceled) {
+            setImageUri(result.assets[0].uri);
+        }
+    }
     // ── Fetch todos ───────────────────────────────────────────────────────────
     const fetchTodos = useCallback(async () => {
         try {
@@ -36,12 +48,14 @@ export default function HomeScreen() {
     useEffect(() => { fetchTodos(); }, []);
 
     // ── CREATE ────────────────────────────────────────────────────────────────
+    // update handleCreate to pass image
     async function handleCreate() {
         if (!newTitle.trim()) return;
         try {
             setLoading(true);
-            await createTodo(newTitle);
+            await createTodo(newTitle, imageUri ?? undefined);
             setNewTitle("");
+            setImageUri(null);   // clear image after creating
             fetchTodos();
         } catch (e: any) {
             handleError(e);
@@ -151,6 +165,12 @@ export default function HomeScreen() {
                         onSubmitEditing={handleCreate}
                         editable={!loading}
                     />
+                    <TouchableOpacity onPress={pickImage}>
+                        <Ionicons name="image-outline" size={24} color="#3b82f6" />
+                    </TouchableOpacity>
+                    {imageUri && (
+                        <Image source={{ uri: imageUri }} style={{ width: 40, height: 40, borderRadius: 8 }} />
+                    )}
                     <TouchableOpacity
                         style={[styles.addButton, loading && styles.addButtonDisabled]}
                         onPress={handleCreate}
@@ -216,7 +236,12 @@ export default function HomeScreen() {
                                             color={item.completed ? "#10b981" : "#6b7280"}
                                         />
                                     </TouchableOpacity>
-
+                                    {item.imageUrl && (
+                                        <Image
+                                            source={{ uri: item.imageUrl }}
+                                            style={{ width: 60, height: 60, borderRadius: 8 }}
+                                        />
+                                    )}
                                     <Text style={[
                                         styles.todoTitle,
                                         item.completed && styles.todoTitleCompleted
