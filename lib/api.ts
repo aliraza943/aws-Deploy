@@ -1,6 +1,7 @@
 import * as SecureStore from "expo-secure-store";
-
-const BASE_URL = "http://51.20.34.207"; // use your machine IP on real device e.g. http://192.168.1.5:3000
+// 16.16.28.135 test 
+// const BASE_URL = "http://51.20.34.207"; // use your machine IP on real device e.g. http://192.168.1.5:3000
+const BASE_URL = "http://16.16.28.135"; // use your machine IP on real device e.g. http://192.168.1.5:3000
 // 192.168.100.191
 // ── Token storage ─────────────────────────────────────────────────────────────
 export async function saveTokens(accessToken: string, refreshToken: string) {
