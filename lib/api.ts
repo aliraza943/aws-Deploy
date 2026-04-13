@@ -1,6 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 
-const BASE_URL = "http://51.20.34.207"; // use your machine IP on real device e.g. http://192.168.1.5:3000
+// const BASE_URL = "http://51.20.34.207"; // use your machine IP on real device e.g. http://192.168.1.5:3000
+const BASE_URL = "http://localhost:3000"; // use your machine IP on real device e.g. http://192.168.1.5:3000
 // 192.168.100.191
 // ── Token storage ─────────────────────────────────────────────────────────────
 export async function saveTokens(accessToken: string, refreshToken: string) {
@@ -83,8 +84,43 @@ export const logout = async () => {
     await clearTokens();
 };
 
+async function apiFetchFormData(path: string, formData: FormData, retry = true): Promise<any> {
+    const accessToken = await getAccessToken();
+
+    const res = await fetch(`${BASE_URL}${path}`, {
+        method: "POST",
+        headers: {
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            // DO NOT set Content-Type here — fetch sets it automatically with boundary
+        },
+        body: formData,
+    });
+
+    if (res.status === 401 && retry) {
+        const newAccessToken = await refreshAccessToken();
+        if (!newAccessToken) throw new Error("SESSION_EXPIRED");
+        return apiFetchFormData(path, formData, false);
+    }
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Request failed");
+    return data;
+};
 // ── Todos ─────────────────────────────────────────────────────────────────────
 export const getTodos = () => apiFetch("/todos");
-export const createTodo = (title: string) => apiFetch("/todos", { method: "POST", body: JSON.stringify({ title }) });
+export const createTodo = async (title: string, imageUri?: string) => {
+    const formData = new FormData();
+    formData.append("title", title);
+
+    if (imageUri) {
+        formData.append("image", {
+            uri: imageUri,
+            type: "image/jpeg",
+            name: "photo.jpg",
+        } as any);
+    }
+
+    return apiFetchFormData("/todos", formData);
+};
 export const updateTodo = (id: number, data: object) => apiFetch(`/todos/${id}`, { method: "PUT", body: JSON.stringify(data) });
 export const deleteTodo = (id: number) => apiFetch(`/todos/${id}`, { method: "DELETE" });

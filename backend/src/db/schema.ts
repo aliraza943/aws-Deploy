@@ -13,6 +13,7 @@ export const todos = pgTable("todos", {
     title: text("title").notNull(),
     completed: boolean("completed").default(false),
     createdAt: timestamp("created_at").defaultNow(),
+    imageUrl: text("image_url"),
     priority: integer("priority").default(0),
 });
 

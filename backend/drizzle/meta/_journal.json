@@ -15,6 +15,13 @@
       "when": 1775919592527,
       "tag": "0001_lonely_junta",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1776091293718,
+      "tag": "0002_fancy_the_captain",
+      "breakpoints": true
     }
   ]
 }
